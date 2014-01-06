@@ -48,6 +48,8 @@ class Upload extends CI_Controller {
 
 	public function read($file_name) {
 
+		$this->config->load('xls_map');
+		
 		$file_path = FCPATH . "uploads/$file_name";
 		if (!is_readable($file_path)) {
 			echo "The Excel file doesn't exists'" . PHP_EOL;
