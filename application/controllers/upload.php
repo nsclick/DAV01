@@ -12,8 +12,7 @@ class Upload extends CI_Controller {
 			'url'
 		));
 
-		//load our new PHPExcel library
-		$this->load->library('excel');
+		
 	}
 
 	public function index() {
@@ -48,20 +47,50 @@ class Upload extends CI_Controller {
 
 	public function read($file_name) {
 
-		$this->config->load('xls_map');
+		$this->config->load('xls_map', true);
+		$this->load->library('read');
+		
+		
+		$xls_map = $this->config->item('xls_map');
+		$xls_map = $xls_map['xls_map'];
+		
+		//Loads file maps
+		$xls_map = $xls_map[$file_name];
 		
 		$file_path = FCPATH . "uploads/$file_name";
 		if (!is_readable($file_path)) {
 			echo "The Excel file doesn't exists'" . PHP_EOL;
 			return false;
 		}
-
-		$this->excel = PHPExcel_IOFactory :: load($file_path);
-		$this->excel->setActiveSheetIndex(2);
-
-		//get some value from a cell
-		echo $number_value = $this->excel->getActiveSheet()->getCell('J31')->getValue();
-		echo PHP_EOL;
+		
+		//Set the file
+		$this->read->set_file($file_path);
+		
+		foreach($xls_map as $index => $g){
+			
+			switch($g['type']){
+				case 'direct':
+					$data = $this->read->direct($g['sheet'], $g['title'], $g['field'], $g['value'], $g['smile']);
+					$g['title'] = $data['title'];
+					$g['field'] = $data['field'];
+					$g['value'] = $data['value'];
+					$xls_map[$index] = $g;
+					break;
+				
+				case 'range':
+					$data = $this->read->range($g['sheet'], $g['title'], $g['range'], $g['smile']);
+					$g['title'] = $data['title'];
+					$g['range'] = $data['range'];
+					$xls_map[$index] = $g;
+					break;			
+			}
+		}
+		
+		
+		//Inserts data onto DB
+		$this->load->model('Read_model');
+		$this->Read_model->insert_graphs($xls_map);
+		
 	}
 }
 
