@@ -23,14 +23,13 @@ class Upload extends CI_Controller {
 
 	function do_upload() {
 		$config['upload_path'] = './uploads/';
-		$config['allowed_types'] = 'xls';
-		//$config['max_size'] = '100';
-		//$config['max_width'] = '1024';
-		//$config['max_height'] = '768';
+		$config['allowed_types'] = '*';
+		$config['max_size'] = 0;
+		$config['overwrite'] = true;
 
 		$this->load->library('upload', $config);
-
-		if (!$this->upload->do_upload()) {
+		
+		if (!$this->upload->do_upload('graphs')) {
 			$error = array (
 				'error' => $this->upload->display_errors()
 			);
@@ -40,7 +39,9 @@ class Upload extends CI_Controller {
 			$data = array (
 				'upload_data' => $this->upload->data()
 			);
-
+	
+			$this->read($data['upload_data']['file_name']);
+			
 			$this->load->view('upload_success', $data);
 		}
 	}
